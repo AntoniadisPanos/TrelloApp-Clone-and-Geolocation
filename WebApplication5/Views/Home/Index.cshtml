@@ -1,0 +1,235 @@
+﻿
+
+
+<div class="trello">
+    <div>
+        <input id="CountryTxt" type="text" placeholder="Give Country" />
+        <button id="countryBtn">Create</button>
+    </div>
+    <div class="container">
+        <div class="space">
+            <strong>Ataksinomita</strong>
+            <ul id="UnClassified">
+               
+            </ul>
+        </div>
+
+        <div class="space">
+            <strong>Europe Countries</strong>
+            <ul id="Europe">
+               
+            </ul>
+        </div>
+
+        <div class="space">
+            <strong>Africa Countries</strong>
+            <ul id="Africa">
+              
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+@section scripts{
+    <script>
+
+        //Double Click contenteditable = true
+        //blur contenteditable = false
+        //blur PUT (MODIFY)
+
+
+
+
+
+
+
+
+
+        $("#countryBtn").click(function (e) {
+            var text = $("#CountryTxt").val();
+            var settings = {
+                "url": "/api/Countries",
+                "method": "POST",
+                "timeout": 0,
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "data": JSON.stringify({
+                    "name": text
+                }),
+            };
+
+            $.ajax(settings).done(function (country) {
+
+                $("#UnClassified").append(CreateCountryListElement(country));
+            });
+        });
+
+
+
+        function CreateCountryListElement(country) {
+            var template = `<li id="${country.id}" draggable="true">${country.name}</li>`;
+            var element = $(template);                 //Creates an Element!
+
+            element.on("dragstart", function (ev) {
+                console.log(ev);
+                ev.originalEvent.dataTransfer.setData("mitsos", ev.target.id);
+            })
+
+            element.on("dblclick", function (ev) {
+                $(this).attr("contenteditable", true);
+            })
+
+            element.on("blur", function (ev) {
+                $(this).attr("contenteditable", false);
+
+                var id = country.id;
+                var text = $(this).text();
+
+                var settings = {
+                    "url": "/api/Countries/" + id,
+                    "method": "PUT",
+                    "timeout": 0,
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "data": JSON.stringify({
+                        "id": id,
+                        "name": text
+                    }),
+                };
+
+                $.ajax(settings).done(function (response) {
+                    console.log(response);
+                });
+            })
+
+            element.on("contextmenu ", function (ev) {
+                var id = country.id;
+
+                var settings = {
+                    "url": "/api/Countries/" + id,
+                    "method": "DELETE",
+                    "timeout": 0,
+                };
+
+                $.ajax(settings).done(function (response) {
+                    element.remove();
+                });
+            })
+
+            element.on("dragend", function (ev) {
+                var countryId = country.id;
+                var categoryName = ev.target.parentElement.getAttribute("id");
+
+                var settings = {
+                    "url": "/api/Countries?id=" + countryId + "&cat=" + categoryName,
+                    "method": "PUT",
+                    "timeout": 0,
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "data": JSON.stringify({
+                        "id": countryId
+                    }),
+                };
+
+                $.ajax(settings).done(function (response) {
+                    console.log(response);
+                });
+
+
+
+                
+            })
+
+
+
+
+
+            return element;
+        }
+
+
+
+
+
+
+
+
+
+
+        //INIT
+        InitializeApplication();
+
+        function InitializeApplication() {
+            var settings = {
+                "url": "/api/Categories",
+                "method": "GET",
+                "timeout": 0,
+            };
+
+            $.ajax(settings).done(function (categories) {
+                console.log(categories);
+                for (var category of categories) {
+                    if (category.name == "Africa") {
+                        for (var country of category.countries) {
+
+                            $("#Africa").append(CreateCountryListElement(country));
+                        }
+                    }
+                    else if (category.name == "Europe") {
+                        for (var country of category.countries) {
+
+                            $("#Europe").append(CreateCountryListElement(country));
+                        }
+                    }
+                    else if (category.name == "UnClassified") {
+                        for (var country of category.countries) {
+
+                            $("#UnClassified").append(CreateCountryListElement(country));
+                        }
+                    }
+                }
+
+            });
+        }
+
+
+
+
+
+
+
+
+
+
+        var lists = document.querySelectorAll(".container li");
+
+        for (var element of lists) {
+            element.addEventListener("dragstart", function (ev) {
+                ev.dataTransfer.setData("mitsos", ev.target.id);
+            });
+        }
+
+        var spaces = document.querySelectorAll(".container .space");
+
+        for (var space of spaces) {
+            space.addEventListener("dragover", function (ev) {
+                ev.preventDefault();
+            })
+
+            space.addEventListener("drop", function (ev) {
+                ev.preventDefault();
+               
+                var data = ev.dataTransfer.getData("mitsos");
+                this.querySelector("ul").append(document.getElementById(data));
+            })
+        }
+
+
+    </script>
+
+
+} 

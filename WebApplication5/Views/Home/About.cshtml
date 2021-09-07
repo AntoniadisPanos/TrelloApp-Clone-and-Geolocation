@@ -1,0 +1,17 @@
+﻿@{ Layout = "~/Views/Shared/SecondLayout.cshtml"; }
+
+<div id="map"></div>
+
+@section scripts{
+    <script>
+        var promiseLocations;
+        var settings = {
+            "url": "/api/shops",
+            "method": "GET",
+            "timeout": 0,
+        };
+        promiseLocations = $.ajax(settings);</script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-s8_H_0e_oA8veU6Kt5Vl-UZzl9evPv0&callback=initMap&libraries=&v=weekly" async></script>
+}
+
